@@ -118,7 +118,7 @@ export default function ShopPage() {
 
         {/* Mobile Filter Button */}
         <Sheet>
-          <SheetTrigger asChild>
+          <SheetTrigger>
             <Button variant="outline" className="md:hidden">
               <Filter className="h-4 w-4 mr-2" />
               Filters

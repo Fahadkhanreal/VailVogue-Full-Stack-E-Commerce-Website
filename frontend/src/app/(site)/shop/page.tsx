@@ -118,16 +118,16 @@ export default function ShopPage() {
 
         {/* Mobile Filter Button */}
         <Sheet>
-          <SheetTrigger
-            render={
-              <Button variant="outline" className="md:hidden" />
-            }
-          >
-            <Filter className="h-4 w-4 mr-2" />
-            Filters
+          <SheetTrigger asChild>
+            <Button variant="outline" className="md:hidden">
+              <Filter className="h-4 w-4 mr-2" />
+              Filters
+            </Button>
           </SheetTrigger>
-          <SheetContent side="left">
-            <ProductFilters onFilterChange={setFilters} />
+          <SheetContent side="left" className="w-[300px] sm:w-[350px]">
+            <div className="py-4">
+              <ProductFilters onFilterChange={setFilters} />
+            </div>
           </SheetContent>
         </Sheet>
       </div>

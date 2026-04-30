@@ -72,10 +72,15 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Filters</h3>
-        <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+    <div className="space-y-6 px-1">
+      <div className="flex items-center justify-between gap-4">
+        <h3 className="font-semibold text-lg">Filters</h3>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClearFilters}
+          className="shrink-0"
+        >
           Clear All
         </Button>
       </div>
@@ -86,7 +91,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
       <div className="space-y-3">
         <Label className="text-base font-semibold">Category</Label>
         {CATEGORIES.map((category) => (
-          <div key={category.id} className="flex items-center space-x-2">
+          <div key={category.id} className="flex items-center space-x-3 py-1">
             <Checkbox
               id={category.id}
               checked={selectedCategories.includes(category.name)}
@@ -96,7 +101,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
             />
             <label
               htmlFor={category.id}
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
             >
               {category.name}
             </label>

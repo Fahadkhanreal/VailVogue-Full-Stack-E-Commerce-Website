@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // Category pages
-  const categories = ['abayas', 'hijabs', 'kurtis', 'dresses', 'accessories'];
+  const categories = ['abayas', 'hijabs', 'dresses', 'kurtis'];
   const categoryPages: MetadataRoute.Sitemap = categories.map((category) => ({
     url: `${baseUrl}/shop?category=${category}`,
     lastModified: new Date(),

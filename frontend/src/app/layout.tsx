@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     default: "VeilVogue - Premium Modest Fashion for Women | Abayas, Hijabs & More",
     template: "%s | VeilVogue"
   },
-  description: "Shop premium modest fashion clothing for Pakistani women. Discover elegant Abayas, stylish Hijabs, beautiful Kurtis, modest Dresses, and fashionable Accessories. Free shipping on orders over Rs. 3000.",
+  description: "Shop premium modest fashion clothing for Pakistani women. Discover elegant Abayas, stylish Hijabs, beautiful Kurtis, and modest Dresses. Free shipping on orders over Rs. 3000.",
   keywords: ["modest fashion", "abayas", "hijabs", "kurtis", "modest dresses", "islamic clothing", "pakistani fashion", "women clothing", "modest wear", "VeilVogue"],
   authors: [{ name: "VeilVogue" }],
   creator: "VeilVogue",

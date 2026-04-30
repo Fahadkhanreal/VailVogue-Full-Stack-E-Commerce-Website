@@ -1,5 +1,5 @@
 // Core Types
-export type Category = 'Abayas' | 'Dresses' | 'Kurtis' | 'Hijabs' | 'Accessories';
+export type Category = 'Abayas' | 'Hijabs' | 'Dresses' | 'Kurtis';
 export type Size = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL';
 export type UserRole = 'USER' | 'ADMIN';
 export type PaymentMethod = 'COD' | 'JazzCash' | 'Easypaisa';

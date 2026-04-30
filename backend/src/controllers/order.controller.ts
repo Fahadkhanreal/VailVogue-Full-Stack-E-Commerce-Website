@@ -27,7 +27,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
 
     // Check stock availability
     for (const item of orderData.items) {
-      const product = products.find((p) => p.id === item.productId);
+      const product = products.find((p: any) => p.id === item.productId);
       if (!product) {
         errorResponse(res, `Product ${item.productId} not found`, 404);
         return;
@@ -45,7 +45,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     // Calculate total
     let total = 0;
     const orderItems = orderData.items.map((item) => {
-      const product = products.find((p) => p.id === item.productId)!;
+      const product = products.find((p: any) => p.id === item.productId)!;
       const price = product.discountPrice || product.price;
       total += price * item.quantity;
 
@@ -59,7 +59,7 @@ export const createOrder = async (req: AuthRequest, res: Response): Promise<void
     });
 
     // Create order with order items in a transaction
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: any) => {
       // Create order
       const newOrder = await tx.order.create({
         data: {

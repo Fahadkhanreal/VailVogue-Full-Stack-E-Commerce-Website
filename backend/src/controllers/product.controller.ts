@@ -35,7 +35,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
         });
 
         if (categoryRecords.length > 0) {
-          const categoryIds = categoryRecords.map(c => c.id);
+          const categoryIds = categoryRecords.map((c: any) => c.id);
           where.categoryId = { in: categoryIds };
         }
       }
@@ -203,7 +203,7 @@ export const getCategories = async (_req: Request, res: Response): Promise<void>
 
     // Add product count for each category
     const categoriesWithCount = await Promise.all(
-      categories.map(async (category) => {
+      categories.map(async (category: any) => {
         const productCount = await prisma.product.count({
           where: { categoryId: category.id },
         });

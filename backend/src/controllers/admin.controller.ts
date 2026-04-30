@@ -25,7 +25,7 @@ export const getDashboardStats = async (_req: AuthRequest, res: Response): Promi
     ]);
 
     // Calculate total revenue from completed orders
-    const totalRevenue = orders.reduce((sum, order: { total: number }) => sum + order.total, 0);
+    const totalRevenue = orders.reduce((sum: number, order: { total: number }) => sum + order.total, 0);
 
     // Get pending orders count
     const pendingOrders = await prisma.order.count({

@@ -72,7 +72,7 @@ export function ProductFilters({ onFilterChange }: ProductFiltersProps) {
   };
 
   return (
-    <div className="space-y-6 px-1">
+    <div className="space-y-6 px-1 pt-12">
       <div className="flex items-center justify-between gap-4">
         <h3 className="font-semibold text-lg">Filters</h3>
         <Button

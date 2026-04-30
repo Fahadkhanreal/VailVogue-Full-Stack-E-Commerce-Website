@@ -1,0 +1,100 @@
+/* Admin Panel Mobile Responsive Fix - Aggressive Solution */
+
+/* Force scrolling on all elements */
+* {
+  -webkit-overflow-scrolling: touch !important;
+}
+
+html {
+  height: 100% !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+body {
+  height: 100% !important;
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+}
+
+/* Admin specific fixes */
+.admin-wrapper {
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+.admin-main-content {
+  min-height: 100vh !important;
+  height: auto !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
+/* Mobile specific - EXTRA PADDING */
+@media (max-width: 1023px) {
+  body {
+    overflow-y: scroll !important;
+    -webkit-overflow-scrolling: touch !important;
+    position: relative !important;
+  }
+
+  .admin-main-content {
+    padding-top: 80px !important;
+    padding-bottom: 250px !important; /* Increased from 150px */
+    min-height: calc(100vh + 400px) !important; /* Increased */
+  }
+
+  /* Force all child divs to be visible */
+  .admin-main-content > * {
+    margin-bottom: 24px !important;
+  }
+
+  /* Last child extra margin */
+  .admin-main-content > *:last-child {
+    margin-bottom: 100px !important;
+  }
+}
+
+/* Taller devices - Even more padding */
+@media (max-width: 1023px) and (min-height: 800px) {
+  .admin-main-content {
+    padding-bottom: 300px !important; /* Increased */
+    min-height: calc(100vh + 500px) !important; /* Increased */
+  }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+  .admin-main-content {
+    margin-left: 256px;
+    padding-top: 32px !important;
+    padding-bottom: 64px !important;
+  }
+}
+
+/* Ensure no parent blocks scrolling */
+#__next,
+[data-nextjs-scroll-focus-boundary] {
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow: visible !important;
+}
+
+/* Specific fixes for dashboard stats */
+.admin-main-content .grid {
+  margin-bottom: 32px !important;
+}
+
+/* Specific fixes for product cards */
+.admin-main-content .space-y-4 > *:last-child,
+.admin-main-content .space-y-6 > *:last-child {
+  margin-bottom: 80px !important;
+}

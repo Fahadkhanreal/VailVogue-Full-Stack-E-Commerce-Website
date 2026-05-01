@@ -59,6 +59,7 @@ class ApiClient {
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'GET',
       headers: this.getHeaders(includeAuth),
+      cache: 'no-store',
     });
 
     return this.handleResponse<T>(response);

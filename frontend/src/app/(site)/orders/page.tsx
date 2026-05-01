@@ -57,7 +57,7 @@ export default function OrdersPage() {
 
     const fetchOrders = async () => {
       try {
-        const response = await api.get<any>('/api/orders?limit=100', true);
+        const response = await api.get<any>('/api/orders?limit=1000', true);
         // Backend returns: { success: true, data: { orders, pagination } }
         setOrders(response.data.orders || []);
       } catch (error) {

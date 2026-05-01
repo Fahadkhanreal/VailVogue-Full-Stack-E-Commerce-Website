@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,75 +14,130 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { OrderStatus } from '@/types';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { api, ApiError } from '@/lib/api';
+import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
-// Mock data
-const mockOrder = {
-  id: '1',
-  orderNumber: 'ORD-001',
-  userId: 'user1',
-  items: [
-    {
-      id: '1',
-      productId: 'prod1',
-      name: 'Elegant Black Abaya',
-      price: 4500,
-      quantity: 1,
-      size: 'M' as const,
-      image: '/placeholder.jpg',
-    },
-  ],
-  shippingDetails: {
-    name: 'Fatima Ahmed',
-    phone: '03001234567',
-    address: 'House 123, Street 5, DHA Phase 2, Karachi',
-  },
-  paymentMethod: 'COD' as const,
-  status: 'Pending' as OrderStatus,
-  subtotal: 4500,
-  deliveryFee: 200,
-  total: 4700,
-  createdAt: '2026-04-24T10:00:00Z',
-  updatedAt: '2026-04-24T10:00:00Z',
-};
+interface OrderItem {
+  id: string;
+  productName: string;
+  quantity: number;
+  size: string;
+  price: number;
+  product: {
+    id: string;
+    name: string;
+    slug: string;
+    images: string[];
+  };
+}
+
+interface Order {
+  id: string;
+  total: number;
+  paymentMethod: string;
+  shippingName: string;
+  shippingPhone: string;
+  shippingAddress: string;
+  status: string;
+  createdAt: string;
+  items: OrderItem[];
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
 
 export default function AdminOrderDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const [order] = useState(mockOrder);
-  const [status, setStatus] = useState<OrderStatus>(order.status);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [status, setStatus] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const response = await api.get<any>(`/api/admin/orders/${params.id}`, true);
+        const orderData = response.data;
+        setOrder(orderData);
+        setStatus(orderData.status);
+      } catch (error) {
+        console.error('Failed to fetch order:', error);
+        const errorMessage = error instanceof ApiError
+          ? error.message
+          : 'Failed to load order details';
+        toast.error('Error', { description: errorMessage });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [params.id]);
 
   const handleStatusUpdate = async () => {
+    if (!order) return;
+
     setIsUpdating(true);
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await api.put(`/api/admin/orders/${params.id}/status`, { status }, true);
       toast.success('Order status updated successfully');
+      setOrder({ ...order, status });
     } catch (error) {
-      toast.error('Failed to update order status');
+      console.error('Failed to update status:', error);
+      const errorMessage = error instanceof ApiError
+        ? error.message
+        : 'Failed to update order status';
+      toast.error('Error', { description: errorMessage });
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const getStatusColor = (status: OrderStatus) => {
-    switch (status) {
-      case 'Pending':
+  const getStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
-      case 'Confirmed':
+      case 'CONFIRMED':
         return 'bg-blue-100 text-blue-800';
-      case 'Shipped':
+      case 'SHIPPED':
         return 'bg-purple-100 text-purple-800';
-      case 'Delivered':
+      case 'DELIVERED':
         return 'bg-green-100 text-green-800';
-      case 'Cancelled':
+      case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <LoadingSkeleton count={1} height="h-8" className="w-48" />
+        <LoadingSkeleton count={3} height="h-32" />
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="space-y-6">
+        <Link href="/admin/orders">
+          <Button variant="ghost" size="sm">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Orders
+          </Button>
+        </Link>
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">Order not found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -97,7 +152,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">{order.orderNumber}</h1>
+          <h1 className="text-3xl font-bold">Order #{order.id.slice(0, 8)}</h1>
           <p className="text-muted-foreground mt-2">
             Placed on {new Date(order.createdAt).toLocaleString('en-PK')}
           </p>
@@ -115,7 +170,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
             {order.items.map((item) => (
               <div key={item.id} className="flex gap-4 pb-4 border-b last:border-0">
                 <div className="flex-1">
-                  <p className="font-medium">{item.name}</p>
+                  <p className="font-medium">{item.productName}</p>
                   <p className="text-sm text-muted-foreground">
                     Size: {item.size} • Qty: {item.quantity}
                   </p>
@@ -127,15 +182,6 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
             <Separator />
 
             <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>Rs. {order.subtotal.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Delivery Fee</span>
-                <span>Rs. {order.deliveryFee.toLocaleString()}</span>
-              </div>
-              <Separator />
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span>Rs. {order.total.toLocaleString()}</span>
@@ -153,15 +199,15 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
             <CardContent className="space-y-3">
               <div>
                 <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{order.shippingDetails.name}</p>
+                <p className="font-medium">{order.shippingName}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{order.shippingDetails.phone}</p>
+                <p className="font-medium">{order.shippingPhone}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Address</p>
-                <p className="font-medium">{order.shippingDetails.address}</p>
+                <p className="font-medium">{order.shippingAddress}</p>
               </div>
             </CardContent>
           </Card>
@@ -180,16 +226,16 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
               <CardTitle>Update Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={status} onValueChange={(value) => setStatus(value as OrderStatus)}>
+              <Select value={status} onValueChange={(value) => setStatus(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Confirmed">Confirmed</SelectItem>
-                  <SelectItem value="Shipped">Shipped</SelectItem>
-                  <SelectItem value="Delivered">Delivered</SelectItem>
-                  <SelectItem value="Cancelled">Cancelled</SelectItem>
+                  <SelectItem value="PENDING">Pending</SelectItem>
+                  <SelectItem value="CONFIRMED">Confirmed</SelectItem>
+                  <SelectItem value="SHIPPED">Shipped</SelectItem>
+                  <SelectItem value="DELIVERED">Delivered</SelectItem>
+                  <SelectItem value="CANCELLED">Cancelled</SelectItem>
                 </SelectContent>
               </Select>
               <Button

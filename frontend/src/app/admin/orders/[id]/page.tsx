@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,17 +50,21 @@ interface Order {
   };
 }
 
-export default function AdminOrderDetailPage({ params }: { params: { id: string } }) {
+export default function AdminOrderDetailPage() {
   const router = useRouter();
+  const params = useParams();
+  const orderId = params.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [status, setStatus] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (!orderId) return;
+
     const fetchOrder = async () => {
       try {
-        const response = await api.get<any>(`/api/admin/orders/${params.id}`, true);
+        const response = await api.get<any>(`/api/admin/orders/${orderId}`, true);
         const orderData = response.data;
         setOrder(orderData);
         setStatus(orderData.status);
@@ -76,14 +80,14 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
     };
 
     fetchOrder();
-  }, [params.id]);
+  }, [orderId]);
 
   const handleStatusUpdate = async () => {
-    if (!order) return;
+    if (!order || !orderId) return;
 
     setIsUpdating(true);
     try {
-      await api.put(`/api/admin/orders/${params.id}/status`, { status }, true);
+      await api.put(`/api/admin/orders/${orderId}/status`, { status }, true);
       toast.success('Order status updated successfully');
       setOrder({ ...order, status });
     } catch (error) {

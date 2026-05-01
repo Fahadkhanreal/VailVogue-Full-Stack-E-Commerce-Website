@@ -120,7 +120,7 @@ export const getUserOrders = async (req: AuthRequest, res: Response): Promise<vo
       return;
     }
 
-    const { page = '1', limit = '20', status } = req.query;
+    const { page = '1', limit = '1000', status } = req.query;
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;

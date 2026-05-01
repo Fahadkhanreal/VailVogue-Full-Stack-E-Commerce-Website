@@ -56,8 +56,11 @@ export default function OrdersPage() {
     }
 
     const fetchOrders = async () => {
+      setIsLoading(true);
       try {
-        const response = await api.get<any>('/api/orders?limit=1000', true);
+        // Add timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const response = await api.get<any>(`/api/orders?limit=1000&_t=${timestamp}`, true);
         // Backend returns: { success: true, data: { orders, pagination } }
         setOrders(response.data.orders || []);
       } catch (error) {

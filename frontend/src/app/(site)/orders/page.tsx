@@ -51,6 +51,9 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
+      // Debug: Check admin status
+      console.log('🔍 Orders Page Debug:', { isAdmin, isAuthenticated });
+
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
 
@@ -59,13 +62,18 @@ export default function OrdersPage() {
         ? `/api/admin/orders?limit=1000&page=1&_t=${timestamp}`
         : `/api/orders?limit=1000&page=1&_t=${timestamp}`;
 
+      console.log('📡 Fetching from endpoint:', endpoint);
+
       const response = await api.get<any>(endpoint, true);
+
+      console.log('✅ Orders response:', response);
 
       // Backend returns: { success: true, data: { orders, pagination } }
       const ordersData = response.data?.orders || [];
+      console.log('📦 Orders count:', ordersData.length);
       setOrders(ordersData);
     } catch (error) {
-      console.error('Orders fetch error:', error);
+      console.error('❌ Orders fetch error:', error);
       const errorMessage = error instanceof ApiError
         ? error.message
         : 'Failed to load orders';

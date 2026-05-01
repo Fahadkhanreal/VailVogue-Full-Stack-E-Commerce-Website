@@ -34,6 +34,19 @@ export default function ShopPage() {
     sizes: [],
   });
 
+  // Initialize filter with URL category on mount
+  useEffect(() => {
+    if (categoryFromUrl) {
+      const categoryName = categoryFromUrl.charAt(0).toUpperCase() + categoryFromUrl.slice(1);
+      if (CATEGORIES.some(cat => cat.name === categoryName)) {
+        setFilters(prev => ({
+          ...prev,
+          categories: [categoryName as Category],
+        }));
+      }
+    }
+  }, [categoryFromUrl]);
+
   // API integration state
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,13 +69,9 @@ export default function ShopPage() {
         if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
 
-        // Use URL category if available, otherwise use filter state
-        const categoriesToUse = categoryFromUrl
-          ? [categoryFromUrl]
-          : filters.categories.map(c => c.toLowerCase());
-
-        if (categoriesToUse.length > 0) {
-          const categoryString = categoriesToUse.join(',');
+        // Use filter state categories (which includes URL category from initialization)
+        if (filters.categories.length > 0) {
+          const categoryString = filters.categories.map(c => c.toLowerCase()).join(',');
           params.append('category', categoryString);
         }
 

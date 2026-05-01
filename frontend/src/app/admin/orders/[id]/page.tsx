@@ -226,7 +226,7 @@ export default function AdminOrderDetailPage({ params }: { params: { id: string 
               <CardTitle>Update Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={status} onValueChange={(value) => setStatus(value)}>
+              <Select value={status} onValueChange={(value) => value && setStatus(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

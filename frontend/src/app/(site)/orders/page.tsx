@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Package, Calendar, CreditCard, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { Package, Calendar, CreditCard, MapPin, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -47,6 +47,32 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchOrders = async () => {
+    try {
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await api.get<any>(`/api/orders?limit=1000&page=1&_t=${timestamp}`, true);
+
+      // Backend returns: { success: true, data: { orders, pagination } }
+      const ordersData = response.data?.orders || [];
+      setOrders(ordersData);
+    } catch (error) {
+      console.error('Orders fetch error:', error);
+      const errorMessage = error instanceof ApiError
+        ? error.message
+        : 'Failed to load orders';
+      toast.error('Error', { description: errorMessage });
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchOrders();
+    setIsRefreshing(false);
+    toast.success('Orders refreshed');
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -55,25 +81,13 @@ export default function OrdersPage() {
       return;
     }
 
-    const fetchOrders = async () => {
+    const loadOrders = async () => {
       setIsLoading(true);
-      try {
-        // Add timestamp to prevent caching
-        const timestamp = new Date().getTime();
-        const response = await api.get<any>(`/api/orders?limit=1000&_t=${timestamp}`, true);
-        // Backend returns: { success: true, data: { orders, pagination } }
-        setOrders(response.data.orders || []);
-      } catch (error) {
-        const errorMessage = error instanceof ApiError
-          ? error.message
-          : 'Failed to load orders';
-        toast.error('Error', { description: errorMessage });
-      } finally {
-        setIsLoading(false);
-      }
+      await fetchOrders();
+      setIsLoading(false);
     };
 
-    fetchOrders();
+    loadOrders();
   }, [isAuthenticated, router]);
 
   const toggleOrderExpansion = (orderId: string) => {
@@ -118,7 +132,18 @@ export default function OrdersPage() {
   return (
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">My Orders</h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">My Orders</h1>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
 
         <div className="space-y-4">
           {orders.map((order) => {

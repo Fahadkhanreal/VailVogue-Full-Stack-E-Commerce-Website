@@ -43,7 +43,7 @@ interface Order {
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
@@ -53,7 +53,13 @@ export default function OrdersPage() {
     try {
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
-      const response = await api.get<any>(`/api/orders?limit=1000&page=1&_t=${timestamp}`, true);
+
+      // Use admin endpoint if user is admin, otherwise use regular endpoint
+      const endpoint = isAdmin
+        ? `/api/admin/orders?limit=1000&page=1&_t=${timestamp}`
+        : `/api/orders?limit=1000&page=1&_t=${timestamp}`;
+
+      const response = await api.get<any>(endpoint, true);
 
       // Backend returns: { success: true, data: { orders, pagination } }
       const ordersData = response.data?.orders || [];

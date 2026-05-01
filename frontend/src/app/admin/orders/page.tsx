@@ -62,7 +62,16 @@ export default function AdminOrdersPage() {
   const fetchOrders = async () => {
     try {
       const timestamp = new Date().getTime();
-      const response = await api.get<any>(`/api/admin/orders?limit=1000&_t=${timestamp}`, true);
+
+      // Build query parameters
+      let queryParams = `limit=1000&_t=${timestamp}`;
+
+      // Add status filter if not 'all'
+      if (statusFilter !== 'all') {
+        queryParams += `&status=${statusFilter}`;
+      }
+
+      const response = await api.get<any>(`/api/admin/orders?${queryParams}`, true);
       const ordersData = response.data?.orders || [];
       setOrders(ordersData);
     } catch (error) {
@@ -81,7 +90,7 @@ export default function AdminOrdersPage() {
       setIsLoading(false);
     };
     loadOrders();
-  }, []);
+  }, [statusFilter]); // Re-fetch when status filter changes
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

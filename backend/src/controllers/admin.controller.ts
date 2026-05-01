@@ -124,6 +124,49 @@ export const getAllOrders = async (req: AuthRequest, res: Response): Promise<voi
   }
 };
 
+// Get single order by ID (admin only)
+export const getOrderById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const orderId = Array.isArray(id) ? id[0] : id;
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        items: {
+          include: {
+            product: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                images: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      errorResponse(res, 'Order not found', 404);
+      return;
+    }
+
+    successResponse(res, order);
+  } catch (error) {
+    console.error('GetOrderById error:', error);
+    errorResponse(res, 'Failed to fetch order', 500);
+  }
+};
+
 // Update order status (admin only)
 export const updateOrderStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {

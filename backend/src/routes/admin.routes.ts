@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   getDashboardStats,
   getAllOrders,
+  getOrderById,
   updateOrderStatus,
 } from '../controllers/admin.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
@@ -16,6 +17,7 @@ router.use(authMiddleware, adminMiddleware);
 
 router.get('/stats', getDashboardStats);
 router.get('/orders', getAllOrders);
+router.get('/orders/:id', getOrderById);
 router.put('/orders/:id/status', validate(updateOrderStatusSchema), updateOrderStatus);
 
 export default router;

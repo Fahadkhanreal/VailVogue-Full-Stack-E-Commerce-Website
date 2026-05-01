@@ -147,7 +147,13 @@ export default function OrdersPage() {
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">My Orders</h1>
+          <div>
+            <h1 className="text-3xl font-bold">My Orders</h1>
+            {/* Debug: Show admin status */}
+            <p className="text-xs text-muted-foreground mt-1">
+              {isAdmin ? '👑 Admin View - Showing all orders' : '👤 User View - Showing your orders'}
+            </p>
+          </div>
           <Button
             variant="outline"
             size="sm"

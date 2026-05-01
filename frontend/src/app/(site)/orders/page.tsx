@@ -43,7 +43,7 @@ interface Order {
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
@@ -51,29 +51,17 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      // Debug: Check admin status
-      console.log('🔍 Orders Page Debug:', { isAdmin, isAuthenticated });
-
       // Add timestamp to prevent caching
       const timestamp = new Date().getTime();
 
-      // Use admin endpoint if user is admin, otherwise use regular endpoint
-      const endpoint = isAdmin
-        ? `/api/admin/orders?limit=1000&page=1&_t=${timestamp}`
-        : `/api/orders?limit=1000&page=1&_t=${timestamp}`;
-
-      console.log('📡 Fetching from endpoint:', endpoint);
-
-      const response = await api.get<any>(endpoint, true);
-
-      console.log('✅ Orders response:', response);
+      // Always use regular orders endpoint (user's personal orders only)
+      const response = await api.get<any>(`/api/orders?limit=1000&page=1&_t=${timestamp}`, true);
 
       // Backend returns: { success: true, data: { orders, pagination } }
       const ordersData = response.data?.orders || [];
-      console.log('📦 Orders count:', ordersData.length);
       setOrders(ordersData);
     } catch (error) {
-      console.error('❌ Orders fetch error:', error);
+      console.error('Orders fetch error:', error);
       const errorMessage = error instanceof ApiError
         ? error.message
         : 'Failed to load orders';
@@ -147,13 +135,7 @@ export default function OrdersPage() {
     <div className="container mx-auto px-4 py-16">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">My Orders</h1>
-            {/* Debug: Show admin status */}
-            <p className="text-xs text-muted-foreground mt-1">
-              {isAdmin ? '👑 Admin View - Showing all orders' : '👤 User View - Showing your orders'}
-            </p>
-          </div>
+          <h1 className="text-3xl font-bold">My Orders</h1>
           <Button
             variant="outline"
             size="sm"

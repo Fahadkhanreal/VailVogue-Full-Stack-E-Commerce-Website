@@ -6,10 +6,11 @@ import { Search } from 'lucide-react';
 interface ProductSearchProps {
   onSearch: (query: string) => void;
   debounceMs?: number;
+  initialValue?: string;
 }
 
-export function ProductSearch({ onSearch, debounceMs = 300 }: ProductSearchProps) {
-  const [query, setQuery] = useState('');
+export function ProductSearch({ onSearch, debounceMs = 300, initialValue = '' }: ProductSearchProps) {
+  const [query, setQuery] = useState(initialValue);
 
   useEffect(() => {
     const timer = setTimeout(() => {

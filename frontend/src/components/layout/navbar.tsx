@@ -21,6 +21,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 export function Navbar() {
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const itemCount = useCart((state) => state.getItemCount());
   const { user, isAuthenticated, clearAuth } = useAuth();
 
@@ -28,6 +29,22 @@ export function Navbar() {
     clearAuth();
     removeAuthToken();
     router.push('/');
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+      }
+    }
   };
 
   useEffect(() => {
@@ -68,14 +85,17 @@ export function Navbar() {
 
           {/* Search Bar */}
           <div className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
                 placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 className="w-full rounded-md border border-input bg-background px-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
-            </div>
+            </form>
           </div>
 
           {/* Right Side Actions */}
@@ -144,6 +164,19 @@ export function Navbar() {
                       <span className="text-2xl font-bold text-primary-500">VeilVogue</span>
                     </Link>
                   </div>
+
+                  {/* Mobile Search Bar */}
+                  <form onSubmit={handleSearch} className="relative w-full">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="search"
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={handleSearchKeyDown}
+                      className="w-full rounded-md border border-input bg-background px-10 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </form>
 
                   {/* User Section */}
                   <div className="flex items-center gap-3 p-4 rounded-lg bg-primary-50/50 border border-primary-100">

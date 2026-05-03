@@ -20,9 +20,11 @@ import { CATEGORIES } from '@/lib/constants';
 export default function ShopPage() {
   const searchParams = useSearchParams();
   const categoryFromUrl = searchParams.get('category');
+  const searchFromUrl = searchParams.get('search');
 
   const [sortOption, setSortOption] = useState<ProductSortOption>('newest');
-  const [searchQuery, setSearchQuery] = useState('');
+  // Initialize searchQuery directly from URL to avoid race condition
+  const [searchQuery, setSearchQuery] = useState(searchFromUrl || '');
 
   const [filters, setFilters] = useState<{
     categories: Category[];
@@ -47,6 +49,13 @@ export default function ShopPage() {
     }
   }, [categoryFromUrl]);
 
+  // Update search query when URL changes (for navigation between searches)
+  useEffect(() => {
+    if (searchFromUrl !== null) {
+      setSearchQuery(searchFromUrl);
+    }
+  }, [searchFromUrl]);
+
   // API integration state
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +74,9 @@ export default function ShopPage() {
         // Add limit to prevent loading too many products at once
         params.append('limit', '50');
 
-        if (searchQuery) params.append('search', searchQuery);
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
         if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
 
@@ -94,6 +105,7 @@ export default function ShopPage() {
           discountedPrice: p.discountPrice,
           discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
         }));
+
         setProducts(mappedProducts);
       } catch (err) {
         const errorMessage = err instanceof ApiError
@@ -121,17 +133,15 @@ export default function ShopPage() {
       {/* Search and Sort */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex-1">
-          <ProductSearch onSearch={setSearchQuery} />
+          <ProductSearch onSearch={setSearchQuery} initialValue={searchQuery} />
         </div>
         <ProductSort value={sortOption} onChange={setSortOption} />
 
         {/* Mobile Filter Button */}
         <Sheet>
-          <SheetTrigger>
-            <Button variant="outline" className="md:hidden">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
+          <SheetTrigger className="md:hidden inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] sm:w-[350px]">
             <div className="py-4">

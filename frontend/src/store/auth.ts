@@ -27,12 +27,6 @@ export const useAuth = create<AuthState>()(
         // Ensure isAdmin is set correctly based on user role
         const isAdmin = user.role === 'ADMIN';
 
-        console.log('🔐 Auth Store - Setting Auth:', {
-          userName: user.name,
-          userRole: user.role,
-          isAdmin: isAdmin,
-        });
-
         set({
           user,
           token,
@@ -72,11 +66,6 @@ export const useAuth = create<AuthState>()(
     {
       name: 'veilvogue-auth',
       onRehydrateStorage: () => (state) => {
-        console.log('💧 Zustand Hydration Complete:', {
-          hasUser: !!state?.user,
-          isAdmin: state?.isAdmin,
-          role: state?.user?.role,
-        });
         state?.setHasHydrated(true);
       },
     }

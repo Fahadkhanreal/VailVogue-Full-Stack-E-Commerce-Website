@@ -20,22 +20,37 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost:3000',
-  'https://veilvogue.vercel.app', // Production frontend (update with actual URL)
-  'https://www.veilvogue.vercel.app', // Production frontend with www
+  'http://localhost:3001',
+  'http://localhost:3002',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:3002',
+  'https://vail-vogue-full-stack-e-commerce-we.vercel.app',
+  'https://veilvogue.vercel.app',
+  'https://www.veilvogue.vercel.app',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    // Allow all localhost and 127.0.0.1 origins on any port
+    const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+    // Allow any Vercel domain (e.g. preview and production deployments)
+    const isVercel = /^https:\/\/[a-zA-Z0-9._-]+\.vercel\.app$/.test(origin) || origin.endsWith('.vercel.app');
+    const isAllowedOrigin = allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ''));
+
+    if (isLocalhost || isVercel || isAllowedOrigin) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`⚠️ Blocked by CORS: Origin "${origin}" is not in allowed origins.`);
+      callback(null, false);
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

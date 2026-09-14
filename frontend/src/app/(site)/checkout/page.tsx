@@ -111,7 +111,14 @@ export default function CheckoutPage() {
         {/* Checkout Form */}
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-card rounded-lg border p-6">
-            <CheckoutForm onSubmit={handleSubmit} isLoading={isLoading} />
+            <CheckoutForm
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              defaultValues={{
+                name: user?.name,
+                phone: user?.phone,
+              }}
+            />
           </div>
 
           <div className="bg-card rounded-lg border p-6">
@@ -123,10 +130,13 @@ export default function CheckoutPage() {
           </div>
 
           <Button
+            id="place-order-submit-button"
+            type="submit"
+            form="checkout-form"
             size="lg"
             className="w-full"
             onClick={() => {
-              const form = document.querySelector('form') as HTMLFormElement;
+              const form = document.getElementById('checkout-form') as HTMLFormElement;
               form?.requestSubmit();
             }}
             disabled={isLoading}

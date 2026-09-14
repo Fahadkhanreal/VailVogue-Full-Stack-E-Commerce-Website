@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { CheckCircle, Package, MapPin, Phone, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,12 @@ interface Order {
     quantity: number;
     size: string;
     price: number;
+    product?: {
+      id: string;
+      name: string;
+      slug: string;
+      images: string[];
+    };
   }>;
 }
 
@@ -49,7 +56,6 @@ function OrderConfirmationContent() {
     const fetchOrder = async () => {
       try {
         const response = await api.get<any>(`/api/orders/${orderId}`, true);
-        // Backend returns: { success: true, data: order }
         setOrder(response.data);
       } catch (error) {
         const errorMessage = error instanceof ApiError
@@ -82,21 +88,21 @@ function OrderConfirmationContent() {
       <div className="max-w-3xl mx-auto">
         {/* Success Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-4 shadow-sm">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
           <h1 className="text-3xl font-bold mb-2">Order Placed Successfully!</h1>
           <p className="text-muted-foreground">
-            Thank you for your order. We'll send you a confirmation shortly.
+            Thank you for shopping with VeilVogue. Your order has been placed and is being processed.
           </p>
         </div>
 
         {/* Order Details Card */}
-        <Card className="mb-6">
+        <Card className="mb-6 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Order Details</span>
-              <span className="text-sm font-normal text-muted-foreground">
+              <span className="text-sm font-normal text-muted-foreground font-mono">
                 Order #{order.id.slice(0, 8)}
               </span>
             </CardTitle>
@@ -105,19 +111,34 @@ function OrderConfirmationContent() {
             {/* Order Items */}
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Package className="w-4 h-4" />
-                Items Ordered
+                <Package className="w-4 h-4 text-primary" />
+                Items Ordered ({order.items.length})
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {order.items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{item.productName}</p>
-                      <p className="text-sm text-muted-foreground">
+                  <div key={item.id} className="flex gap-3 items-center pb-3 border-b last:border-0 last:pb-0">
+                    <div className="relative w-14 h-16 rounded-md overflow-hidden border bg-muted shrink-0">
+                      {item.product?.images?.[0] ? (
+                        <Image
+                          src={item.product.images[0]}
+                          alt={item.productName}
+                          fill
+                          className="object-cover"
+                          sizes="56px"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Package className="w-5 h-5 opacity-40" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm line-clamp-1">{item.productName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
                         Size: {item.size} • Qty: {item.quantity}
                       </p>
                     </div>
-                    <p className="font-semibold">
+                    <p className="font-bold text-sm whitespace-nowrap">
                       Rs. {(item.price * item.quantity).toLocaleString()}
                     </p>
                   </div>
@@ -130,13 +151,13 @@ function OrderConfirmationContent() {
             {/* Shipping Details */}
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
+                <MapPin className="w-4 h-4 text-primary" />
                 Shipping Details
               </h3>
               <div className="space-y-2 text-sm">
                 <p><strong>Name:</strong> {order.shippingName}</p>
                 <p className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
+                  <Phone className="w-4 h-4 text-muted-foreground" />
                   {order.shippingPhone}
                 </p>
                 <p><strong>Address:</strong> {order.shippingAddress}</p>
@@ -148,7 +169,7 @@ function OrderConfirmationContent() {
             {/* Payment Details */}
             <div>
               <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <CreditCard className="w-4 h-4" />
+                <CreditCard className="w-4 h-4 text-primary" />
                 Payment Details
               </h3>
               <div className="space-y-2 text-sm">
@@ -162,7 +183,7 @@ function OrderConfirmationContent() {
             {/* Total */}
             <div className="flex justify-between items-center text-lg font-bold">
               <span>Total Amount</span>
-              <span>Rs. {order.total.toLocaleString()}</span>
+              <span className="text-primary text-xl">Rs. {order.total.toLocaleString()}</span>
             </div>
           </CardContent>
         </Card>

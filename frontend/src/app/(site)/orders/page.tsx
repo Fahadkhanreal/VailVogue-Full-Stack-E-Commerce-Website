@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Package, Calendar, CreditCard, MapPin, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -203,23 +204,38 @@ export default function OrdersPage() {
                     <>
                       <Separator className="my-4" />
 
-                      {/* Order Items */}
-                      <div className="space-y-3 mb-4">
-                        <h4 className="font-semibold text-sm">Items</h4>
-                        {order.items.map((item) => (
-                          <div key={item.id} className="flex justify-between items-start text-sm">
-                            <div>
-                              <p className="font-medium">{item.productName}</p>
-                              <p className="text-muted-foreground">
-                                Size: {item.size} • Qty: {item.quantity}
+                        {/* Order Items */}
+                        <div className="space-y-3 mb-4">
+                          <h4 className="font-semibold text-sm">Items</h4>
+                          {order.items.map((item) => (
+                            <div key={item.id} className="flex gap-3 items-center text-sm py-1 border-b last:border-0">
+                              <div className="relative w-12 h-14 rounded-md overflow-hidden border bg-muted shrink-0">
+                                {item.product?.images?.[0] ? (
+                                  <Image
+                                    src={item.product.images[0]}
+                                    alt={item.productName}
+                                    fill
+                                    className="object-cover"
+                                    sizes="48px"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                    <Package className="w-4 h-4 opacity-40" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium line-clamp-1">{item.productName}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Size: {item.size} • Qty: {item.quantity}
+                                </p>
+                              </div>
+                              <p className="font-semibold whitespace-nowrap">
+                                Rs. {(item.price * item.quantity).toLocaleString()}
                               </p>
                             </div>
-                            <p className="font-semibold">
-                              Rs. {(item.price * item.quantity).toLocaleString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
 
                       <Separator className="my-4" />
 

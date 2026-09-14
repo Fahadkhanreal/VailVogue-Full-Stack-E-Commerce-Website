@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Rich Royal Velvet Plum Radial Gradient -->
+    <radialGradient id="bg" cx="50%" cy="45%" r="65%">
+      <stop offset="0%" stop-color="#440B28" />
+      <stop offset="55%" stop-color="#1E0312" />
+      <stop offset="100%" stop-color="#080004" />
+    </radialGradient>
+
+    <!-- 24K Royal Polished Gold Gradient -->
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF8E7" />
+      <stop offset="20%" stop-color="#F7D891" />
+      <stop offset="50%" stop-color="#DBA446" />
+      <stop offset="80%" stop-color="#F5D285" />
+      <stop offset="100%" stop-color="#A56C19" />
+    </linearGradient>
+
+    <!-- Silk Magenta / Rose Gradient -->
+    <linearGradient id="rose" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6EA8" />
+      <stop offset="50%" stop-color="#CD1F6C" />
+      <stop offset="100%" stop-color="#6B0935" />
+    </linearGradient>
+
+    <!-- Soft Glow Filter -->
+    <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+
+    <!-- Deep Luxury Drop Shadow Filter -->
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000000" flood-opacity="0.75" />
+    </filter>
+  </defs>
+
+  <!-- Outer Rounded Squircle with Double Gold Frame -->
+  <rect x="24" y="24" width="464" height="464" rx="120" fill="url(#bg)" stroke="url(#gold)" stroke-width="8" />
+  <rect x="40" y="40" width="432" height="432" rx="104" fill="none" stroke="url(#gold)" stroke-width="2" stroke-opacity="0.45" />
+
+  <!-- Royal Geometric Filigree Outer Ring -->
+  <circle cx="256" cy="256" r="195" fill="none" stroke="url(#gold)" stroke-width="2.5" stroke-dasharray="8 6" opacity="0.4" />
+
+  <!-- Flowing Veil Arch & Royal V Monogram -->
+  <g filter="url(#shadow)">
+    <!-- Silk Veil Halo Arch -->
+    <path 
+      d="M 256 100 
+         C 335 100, 395 160, 395 235 
+         C 395 320, 300 380, 256 415 
+         C 212 380, 117 320, 117 235 
+         C 117 160, 177 100, 256 100 Z" 
+      fill="none" 
+      stroke="url(#gold)" 
+      stroke-width="3" 
+      opacity="0.35" 
+    />
+
+    <!-- Main Bold Serif "V" Monogram in 24k Gold -->
+    <path 
+      d="M 132 152 
+         L 198 152 
+         L 256 325 
+         L 314 152 
+         L 380 152 
+         L 288 392 
+         L 224 392 Z" 
+      fill="url(#gold)" 
+    />
+
+    <!-- Inner Rose Silk Velvet Inset for Rich Contrast & Brand Color -->
+    <path 
+      d="M 166 168 
+         L 204 168 
+         L 256 304 
+         L 308 168 
+         L 346 168 
+         L 276 364 
+         L 236 364 Z" 
+      fill="url(#rose)" 
+    />
+  </g>
+
+  <!-- Royal Crown Jewel Diamond Star at Top -->
+  <g transform="translate(256, 118)" filter="url(#goldGlow)">
+    <path 
+      d="M 0 -24 Q 0 0 24 0 Q 0 0 0 24 Q 0 0 -24 0 Q 0 0 0 -24 Z" 
+      fill="url(#gold)" 
+    />
+    <circle cx="0" cy="0" r="5" fill="#FFFFFF" />
+  </g>
+
+  <!-- Side Sparkle Accents -->
+  <g transform="translate(132, 140) scale(0.6)" opacity="0.85">
+    <path d="M 0 -16 Q 0 0 16 0 Q 0 0 0 16 Q 0 0 -16 0 Q 0 0 0 -16 Z" fill="url(#gold)" />
+  </g>
+  <g transform="translate(380, 140) scale(0.6)" opacity="0.85">
+    <path d="M 0 -16 Q 0 0 16 0 Q 0 0 0 16 Q 0 0 -16 0 Q 0 0 0 -16 Z" fill="url(#gold)" />
+  </g>
+</svg>

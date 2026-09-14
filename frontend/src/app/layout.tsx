@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   authors: [{ name: "VeilVogue" }],
   creator: "VeilVogue",
   publisher: "VeilVogue",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    apple: [
+      { url: '/apple-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
   formatDetection: {
     email: false,
     address: false,

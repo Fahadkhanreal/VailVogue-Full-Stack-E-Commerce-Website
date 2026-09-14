@@ -17,7 +17,7 @@ import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, getTotal, clearCart } = useCart();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, _hasHydrated } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,24 +25,21 @@ export default function CheckoutPage() {
   const deliveryFee = 200;
   const total = subtotal + deliveryFee;
 
-  // Check authentication
+  // Check authentication after store is hydrated
   useEffect(() => {
-    if (!isAuthenticated) {
-      toast.error('Please login to continue with checkout');
-      router.push(`/login?returnUrl=${encodeURIComponent('/checkout')}`);
+    if (_hasHydrated) {
+      if (!isAuthenticated) {
+        toast.error('Please login to continue with checkout');
+        router.push(`/login?returnUrl=${encodeURIComponent('/checkout')}`);
+      } else if (items.length === 0) {
+        toast.info('Your cart is empty');
+        router.push('/cart');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [_hasHydrated, isAuthenticated, items.length, router]);
 
-  // Redirect if cart is empty
-  useEffect(() => {
-    if (items.length === 0 && isAuthenticated) {
-      toast.info('Your cart is empty');
-      router.push('/cart');
-    }
-  }, [items.length, isAuthenticated, router]);
-
-  // Don't render if not authenticated or cart is empty
-  if (!isAuthenticated || items.length === 0) {
+  // Don't render if not hydrated, not authenticated or cart is empty
+  if (!_hasHydrated || !isAuthenticated || items.length === 0) {
     return (
       <div className="container mx-auto px-4 py-16">
         <LoadingSkeleton count={3} height="h-8" className="mb-4" />

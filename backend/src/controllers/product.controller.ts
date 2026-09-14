@@ -28,16 +28,8 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
     if (category) {
       // Support multiple categories separated by comma
       const categoryList = category.split(',').map(c => c.trim().toLowerCase());
-
       if (categoryList.length > 0) {
-        const categoryRecords = await prisma.category.findMany({
-          where: { slug: { in: categoryList } },
-        });
-
-        if (categoryRecords.length > 0) {
-          const categoryIds = categoryRecords.map((c: any) => c.id);
-          where.categoryId = { in: categoryIds };
-        }
+        where.category = { slug: { in: categoryList } };
       }
     }
 
@@ -90,6 +82,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
 
     const totalPages = Math.ceil(total / limitNum);
 
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
     successResponse(res, {
       products,
       pagination: {
@@ -132,6 +125,7 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
     successResponse(res, product);
   } catch (error) {
     console.error('GetProductById error:', error);
@@ -163,6 +157,7 @@ export const getProductBySlug = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
     successResponse(res, product);
   } catch (error) {
     console.error('GetProductBySlug error:', error);
@@ -188,6 +183,7 @@ export const getFeaturedProducts = async (_req: Request, res: Response): Promise
       take: 10, // Limit to 10 featured products
     });
 
+    res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=120, stale-while-revalidate=300');
     successResponse(res, products);
   } catch (error) {
     console.error('GetFeaturedProducts error:', error);
@@ -200,21 +196,23 @@ export const getCategories = async (_req: Request, res: Response): Promise<void>
   try {
     const categories = await prisma.category.findMany({
       orderBy: { name: 'asc' },
+      include: {
+        _count: {
+          select: { products: true },
+        },
+      },
     });
 
-    // Add product count for each category
-    const categoriesWithCount = await Promise.all(
-      categories.map(async (category: any) => {
-        const productCount = await prisma.product.count({
-          where: { categoryId: category.id },
-        });
-        return {
-          ...category,
-          productCount,
-        };
-      })
-    );
+    const categoriesWithCount = categories.map((category: any) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      createdAt: category.createdAt,
+      updatedAt: category.updatedAt,
+      productCount: category._count?.products || 0,
+    }));
 
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600, stale-while-revalidate=600');
     successResponse(res, categoriesWithCount);
   } catch (error) {
     console.error('GetCategories error:', error);

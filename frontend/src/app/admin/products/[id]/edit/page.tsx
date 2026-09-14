@@ -24,6 +24,8 @@ import { CATEGORIES, SIZES } from '@/lib/constants';
 import { api, ApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import Image from 'next/image';
+import { optimizeImageUrl } from '@/lib/utils';
 
 const productSchema = z.object({
   name: z.string().min(3, 'Name must be at least 3 characters'),
@@ -415,12 +417,18 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {images.map((img, index) => (
                   <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
-                    <img src={img} alt={`Product ${index + 1}`} className="object-cover w-full h-full" />
+                    <Image
+                      src={optimizeImageUrl(img, 300)}
+                      alt={`Product ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="150px"
+                    />
                     <Button
                       type="button"
                       variant="destructive"
                       size="icon"
-                      className="absolute top-1 right-1 h-6 w-6"
+                      className="absolute top-1 right-1 h-6 w-6 z-10"
                       onClick={() => removeImage(index)}
                     >
                       <X className="h-4 w-4" />

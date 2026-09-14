@@ -18,6 +18,7 @@ export const getInstagramPosts = async (_req: Request, res: Response) => {
     });
     console.log('✅ Found posts:', posts.length);
 
+    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=300, stale-while-revalidate=600');
     res.json({
       success: true,
       data: posts,

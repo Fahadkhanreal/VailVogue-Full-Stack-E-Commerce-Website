@@ -116,6 +116,19 @@ export default function AdminOrdersPage() {
     }
   };
 
+  const filteredOrders = orders.filter((order) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    return (
+      order.id.toLowerCase().includes(query) ||
+      order.shippingName.toLowerCase().includes(query) ||
+      order.shippingPhone.toLowerCase().includes(query) ||
+      order.shippingAddress.toLowerCase().includes(query) ||
+      order.paymentMethod.toLowerCase().includes(query) ||
+      order.status.toLowerCase().includes(query)
+    );
+  });
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -155,7 +168,7 @@ export default function AdminOrdersPage() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by customer name or phone..."
+            placeholder="Search by customer name, phone, or order ID..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -191,7 +204,7 @@ export default function AdminOrdersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell>
                   <div className="font-medium">#{order.id.slice(0, 8)}</div>
@@ -231,7 +244,7 @@ export default function AdminOrdersPage() {
 
       {/* Orders Cards - Mobile */}
       <div className="md:hidden space-y-4">
-        {orders.map((order) => (
+        {filteredOrders.map((order) => (
           <div key={order.id} className="border rounded-lg p-4 space-y-3">
             <div className="flex items-start justify-between">
               <div>
@@ -272,9 +285,11 @@ export default function AdminOrdersPage() {
         ))}
       </div>
 
-      {orders.length === 0 && (
+      {filteredOrders.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No orders found</p>
+          <p className="text-muted-foreground">
+            {searchQuery ? 'No orders match your search query' : 'No orders found'}
+          </p>
         </div>
       )}
     </div>

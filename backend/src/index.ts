@@ -1,5 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { errorHandler } from './middleware/error.middleware';
 import authRoutes from './routes/auth.routes';
@@ -15,10 +18,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Middleware
+// Security Headers with Helmet
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
+
+// Gzip / Brotli Compression
+app.use(compression());
+
+// Parse dynamic environment-configured allowed origins
+const envAllowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
+  : [];
+
 // CORS configuration for development and production
 const allowedOrigins = [
   FRONTEND_URL,
+  ...envAllowedOrigins,
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:3002',
@@ -28,7 +44,7 @@ const allowedOrigins = [
   'https://vail-vogue-full-stack-e-commerce-we.vercel.app',
   'https://veilvogue.vercel.app',
   'https://www.veilvogue.vercel.app',
-];
+].filter(Boolean);
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -52,6 +68,31 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
+
+// Rate Limiting
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // Limit each IP to 300 requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again after 15 minutes.',
+  },
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // Limit each IP to 20 auth requests per 15 minutes
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many login attempts from this IP, please try again after 15 minutes.',
+  },
+});
+
+app.use(generalLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -65,7 +106,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // Routes
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api', productRoutes);
 app.use('/api', orderRoutes);
 app.use('/api/admin', adminRoutes);

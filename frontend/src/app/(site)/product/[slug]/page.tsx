@@ -31,38 +31,71 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
   const [quantity, setQuantity] = useState(1);
   const addItem = useCart((state) => state.addItem);
 
-  // API integration state
-  const [product, setProduct] = useState<Product | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Synchronously check if product is already in memory cache (from list or hover)
+  const cachedResponse = api.getCached<any>(`/api/products/slug/${slug}`);
+  const initialProduct = cachedResponse?.data || null;
+
+  // API integration state (if already cached, no initial loading state!)
+  const [product, setProduct] = useState<Product | null>(initialProduct);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(!initialProduct);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch product from backend
+  // Fetch product and related products
   useEffect(() => {
-    async function fetchProduct() {
-      setIsLoading(true);
+    async function fetchProductAndRelated() {
+      if (!product) {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
         const response = await api.get<any>(`/api/products/slug/${slug}`);
-        // Backend returns: { success: true, data: product }
         const productData = response.data;
-        console.log('🛍️ Product fetched:', productData.name);
-        console.log('🖼️ Product images:', productData.images);
-        console.log('🖼️ Total images count:', productData.images?.length || 0);
         setProduct(productData);
+
+        // Fetch related products in the same category
+        const catSlug = productData?.category?.slug || (typeof productData?.category === 'string' ? productData.category.toLowerCase() : '');
+        if (catSlug) {
+          try {
+            const relatedRes = await api.get<any>(`/api/products?category=${encodeURIComponent(catSlug)}&limit=5`);
+            const rawRelated = relatedRes.data?.products || relatedRes.products || [];
+            const filtered = rawRelated
+              .filter((p: any) => p.slug !== slug && p.id !== productData.id)
+              .slice(0, 4)
+              .map((p: any) => ({
+                ...p,
+                category: p.category?.name || p.category,
+                discountedPrice: p.discountPrice,
+                discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
+              }));
+
+            // Pre-seed cache for related products
+            filtered.forEach((p: Product) => {
+              if (p.slug) {
+                api.setCache(`/api/products/slug/${p.slug}`, { success: true, data: p });
+              }
+            });
+
+            setRelatedProducts(filtered);
+          } catch (relErr) {
+            console.warn('Failed to fetch related products:', relErr);
+          }
+        }
       } catch (err) {
         const errorMessage = err instanceof ApiError
           ? err.message
           : 'Failed to load product';
-        setError(errorMessage);
-        toast.error(errorMessage);
-        console.error('Error fetching product:', err);
+        if (!product) {
+          setError(errorMessage);
+          toast.error(errorMessage);
+        }
       } finally {
         setIsLoading(false);
       }
     }
 
-    fetchProduct();
+    fetchProductAndRelated();
   }, [slug]);
 
   // Loading state
@@ -324,9 +357,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ slug: 
       </div>
 
       {/* Related Products */}
-      <div className="mt-16">
-        <RelatedProducts products={[]} />
-      </div>
+      {relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <RelatedProducts products={relatedProducts} />
+        </div>
+      )}
     </div>
   );
 }

@@ -8,7 +8,8 @@ import { Product } from '@/types';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatPrice, calculateDiscountedPrice } from '@/lib/utils';
+import { formatPrice, calculateDiscountedPrice, optimizeImageUrl } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 interface ProductCardProps {
   product: Product;
@@ -20,19 +21,31 @@ const ProductCard = memo(function ProductCard({ product, priority = false }: Pro
     ? calculateDiscountedPrice(product.price, product.discount)
     : product.price;
 
+  const handlePrefetch = () => {
+    if (product?.slug) {
+      if (!api.getCached(`/api/products/slug/${product.slug}`)) {
+        api.setCache(`/api/products/slug/${product.slug}`, { success: true, data: product });
+      }
+    }
+  };
+
   return (
-    <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300">
-      <Link href={`/product/${product.slug}`}>
+    <Card
+      className="group overflow-hidden hover:shadow-lg transition-all duration-300"
+      onMouseEnter={handlePrefetch}
+      onTouchStart={handlePrefetch}
+    >
+      <Link href={`/product/${product.slug}`} prefetch={true}>
         <div className="relative aspect-[3/4] overflow-hidden bg-muted">
           <Image
-            src={product.images[0] || '/placeholder.svg'}
+            src={optimizeImageUrl(product.images[0], 600)}
             alt={`${product.name} - ${product.category} from VeilVogue`}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
             sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
             loading={priority ? "eager" : "lazy"}
             priority={priority}
-            quality={75}
+            quality={80}
           />
           {product.discount && product.discount > 0 && (
             <Badge className="absolute top-2 right-2 bg-primary-500">

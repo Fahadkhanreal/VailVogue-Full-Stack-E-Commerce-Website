@@ -26,3 +26,25 @@ export function generateCartItemId(productId: string, size: Size, color?: string
 export function isAdmin(userRole?: string): boolean {
   return userRole === 'ADMIN'
 }
+
+// Automatically optimize image URLs (Cloudinary & Unsplash)
+export function optimizeImageUrl(url?: string, width: number = 800): string {
+  if (!url) return '/placeholder.svg'
+
+  // Cloudinary optimization (f_auto, q_auto, w_X)
+  if (url.includes('cloudinary.com') && url.includes('/upload/')) {
+    if (!url.includes('f_auto') && !url.includes('q_auto')) {
+      return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width},c_limit/`)
+    }
+  }
+
+  // Unsplash optimization
+  if (url.includes('unsplash.com')) {
+    const separator = url.includes('?') ? '&' : '?'
+    if (!url.includes('auto=format')) {
+      return `${url}${separator}auto=format&fit=crop&w=${width}&q=75`
+    }
+  }
+
+  return url
+}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { api } from '@/lib/api';
+import { optimizeImageUrl } from '@/lib/utils';
 
 interface InstagramPost {
   id: string;
@@ -65,13 +66,13 @@ export function Gallery() {
                 className="relative aspect-square overflow-hidden rounded-lg group cursor-pointer"
               >
                 <Image
-                  src={post.imageUrl}
+                  src={optimizeImageUrl(post.imageUrl, 500)}
                   alt="Instagram post"
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-300"
                   sizes="(max-width: 768px) 50vw, 33vw"
                   loading="lazy"
-                  quality={75}
+                  quality={80}
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
               </a>

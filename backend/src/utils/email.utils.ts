@@ -29,8 +29,9 @@ export const sendPasswordResetEmail = async ({
   const resend = getResendClient();
 
   try {
+    const fromEmail = process.env.RESEND_FROM_EMAIL || 'VeilVogue <onboarding@resend.dev>';
     const result = await resend.emails.send({
-      from: 'VeilVogue <onboarding@resend.dev>',
+      from: fromEmail,
       to,
       subject: 'Reset Your Password - VeilVogue',
       html: `

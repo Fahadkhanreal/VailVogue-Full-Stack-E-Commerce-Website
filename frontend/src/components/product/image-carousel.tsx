@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { optimizeImageUrl } from '@/lib/utils';
 
 interface ImageCarouselProps {
   images: string[];
@@ -11,11 +12,7 @@ interface ImageCarouselProps {
 export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  console.log('🎠 ImageCarousel received images:', images);
-  console.log('🎠 Total images:', images?.length || 0);
-
   const handleThumbnailClick = (index: number) => {
-    console.log('👆 Thumbnail clicked:', index);
     setSelectedIndex(index);
   };
 
@@ -24,11 +21,12 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
       {/* Main Image */}
       <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-muted">
         <Image
-          src={images[selectedIndex] || '/placeholder.svg'}
+          src={optimizeImageUrl(images[selectedIndex], 1000)}
           alt={`${alt} - Image ${selectedIndex + 1}`}
           fill
           className="object-cover"
           priority
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
       </div>
 
@@ -47,10 +45,11 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
               }`}
             >
               <Image
-                src={image}
+                src={optimizeImageUrl(image, 200)}
                 alt={`${alt} - Thumbnail ${index + 1}`}
                 fill
                 className="object-cover"
+                sizes="100px"
               />
             </button>
           ))}

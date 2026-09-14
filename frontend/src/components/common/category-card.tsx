@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Category } from '@/types';
+import { optimizeImageUrl } from '@/lib/utils';
 
 interface CategoryCardProps {
   category: {
@@ -26,13 +27,13 @@ export function CategoryCard({ category }: CategoryCardProps) {
     >
       <div className="relative aspect-square overflow-hidden bg-muted">
         <Image
-          src={category.image || '/placeholder.svg'}
+          src={optimizeImageUrl(category.image, 400)}
           alt={category.name}
           fill
           className="object-cover object-top"
           sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
           loading="lazy"
-          quality={75}
+          quality={80}
           draggable={false}
         />
       </div>

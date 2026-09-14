@@ -13,85 +13,70 @@ import { toast } from 'sonner';
 import { generateOrganizationSchema } from '@/lib/seo';
 
 export default function HomePage() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-  const [bestsellerProducts, setBestsellerProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isBestsellersLoading, setIsBestsellersLoading] = useState(true);
+  const cachedFeatured = api.getCached<any>('/api/products?featured=true&limit=8');
+  const cachedBestsellers = api.getCached<any>('/api/products?bestseller=true&limit=8');
+
+  const mapProducts = (raw: any[], isBestseller: boolean = false): Product[] => {
+    return raw.map((p: any) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      price: p.price,
+      discountedPrice: p.discountPrice,
+      discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
+      category: p.category?.name || (typeof p.category === 'string' ? p.category : 'Uncategorized'),
+      sizes: p.sizes || [],
+      colors: p.colors,
+      images: p.images || [],
+      stock: p.stock,
+      featured: p.featured,
+      bestseller: isBestseller,
+      createdAt: p.createdAt,
+      updatedAt: p.updatedAt,
+    }));
+  };
+
+  const initialFeaturedList = cachedFeatured ? mapProducts(cachedFeatured.data?.products || cachedFeatured.products || []) : [];
+  const initialBestsellerList = cachedBestsellers ? mapProducts(cachedBestsellers.data?.products || cachedBestsellers.products || [], true) : [];
+
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>(initialFeaturedList);
+  const [bestsellerProducts, setBestsellerProducts] = useState<Product[]>(initialBestsellerList);
+  const [isLoading, setIsLoading] = useState(initialFeaturedList.length === 0);
+  const [isBestsellersLoading, setIsBestsellersLoading] = useState(initialBestsellerList.length === 0);
 
   useEffect(() => {
-    async function fetchFeaturedProducts() {
+    async function fetchHomeData() {
       try {
-        const response = await api.get<any>('/api/products?featured=true&limit=8');
+        const [featuredRes, bestsellerRes] = await Promise.all([
+          api.get<any>('/api/products?featured=true&limit=8'),
+          api.get<any>('/api/products?bestseller=true&limit=8'),
+        ]);
 
-        // Map API products to frontend Product type
-        const mappedProducts: Product[] = (response.data?.products || response.products || []).map((p: any) => ({
-          id: p.id,
-          slug: p.slug,
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          discountedPrice: p.discountPrice,
-          discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
-          category: p.category?.name || 'Uncategorized',
-          sizes: p.sizes || [],
-          colors: p.colors,
-          images: p.images || [],
-          stock: p.stock,
-          featured: p.featured,
-          bestseller: false,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
-        }));
+        const rawFeatured = featuredRes.data?.products || featuredRes.products || [];
+        const rawBestsellers = bestsellerRes.data?.products || bestsellerRes.products || [];
 
-        setFeaturedProducts(mappedProducts);
+        // Pre-seed product detail cache for instant click navigation
+        [...rawFeatured, ...rawBestsellers].forEach((p: any) => {
+          if (p.slug) {
+            api.setCache(`/api/products/slug/${p.slug}`, { success: true, data: p });
+          }
+        });
+
+        const mappedFeatured = mapProducts(rawFeatured, false);
+        const mappedBestsellers = mapProducts(rawBestsellers, true);
+
+        setFeaturedProducts(mappedFeatured);
+        setBestsellerProducts(mappedBestsellers);
       } catch (err) {
-        console.error('Error fetching featured products:', err);
-        if (err instanceof ApiError) {
-          toast.error('Failed to load featured products');
-        }
+        console.error('Error fetching homepage data:', err);
       } finally {
         setIsLoading(false);
-      }
-    }
-
-    async function fetchBestsellerProducts() {
-      try {
-        // Fetch bestseller products from backend
-        const response = await api.get<any>('/api/products?bestseller=true&limit=8');
-
-        // Map API products to frontend Product type
-        const mappedProducts: Product[] = (response.data?.products || response.products || []).map((p: any) => ({
-          id: p.id,
-          slug: p.slug,
-          name: p.name,
-          description: p.description,
-          price: p.price,
-          discountedPrice: p.discountPrice,
-          discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
-          category: p.category?.name || 'Uncategorized',
-          sizes: p.sizes || [],
-          colors: p.colors,
-          images: p.images || [],
-          stock: p.stock,
-          featured: p.featured,
-          bestseller: true,
-          createdAt: p.createdAt,
-          updatedAt: p.updatedAt,
-        }));
-
-        setBestsellerProducts(mappedProducts);
-      } catch (err) {
-        console.error('Error fetching bestseller products:', err);
-        if (err instanceof ApiError) {
-          toast.error('Failed to load bestseller products');
-        }
-      } finally {
         setIsBestsellersLoading(false);
       }
     }
 
-    fetchFeaturedProducts();
-    fetchBestsellerProducts();
+    fetchHomeData();
   }, []);
 
   return (

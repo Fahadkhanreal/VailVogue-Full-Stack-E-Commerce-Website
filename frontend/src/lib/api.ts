@@ -14,9 +14,16 @@ export class ApiError extends Error {
   }
 }
 
-// API client with authentication and error handling
+interface CacheItem<T> {
+  data: T;
+  timestamp: number;
+}
+
+// API client with authentication, in-memory caching and error handling
 class ApiClient {
   private baseURL: string;
+  private cache = new Map<string, CacheItem<any>>();
+  private readonly CACHE_TTL_MS = 60 * 1000; // 60 seconds memory cache
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
@@ -55,17 +62,57 @@ class ApiClient {
     return response.json();
   }
 
-  async get<T>(endpoint: string, includeAuth: boolean = false): Promise<T> {
+  // Clear memory cache (useful when data is created/updated/deleted)
+  public clearCache(): void {
+    this.cache.clear();
+  }
+
+  // Get data synchronously from cache if valid
+  public getCached<T>(endpoint: string): T | null {
+    const cached = this.cache.get(endpoint);
+    if (cached && Date.now() - cached.timestamp < this.CACHE_TTL_MS) {
+      return cached.data as T;
+    }
+    return null;
+  }
+
+  // Manually pre-seed cache (e.g. from product lists)
+  public setCache<T>(endpoint: string, data: T): void {
+    this.cache.set(endpoint, {
+      data,
+      timestamp: Date.now(),
+    });
+  }
+
+  async get<T>(endpoint: string, includeAuth: boolean = false, forceRefresh: boolean = false): Promise<T> {
+    // Only use memory cache for public, unauthenticated GET requests
+    if (!includeAuth && !forceRefresh) {
+      const cached = this.getCached<T>(endpoint);
+      if (cached !== null) {
+        return cached;
+      }
+    }
+
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'GET',
       headers: this.getHeaders(includeAuth),
-      cache: 'no-store',
+      cache: includeAuth ? 'no-store' : 'default',
     });
 
-    return this.handleResponse<T>(response);
+    const data = await this.handleResponse<T>(response);
+
+    if (!includeAuth) {
+      this.cache.set(endpoint, {
+        data,
+        timestamp: Date.now(),
+      });
+    }
+
+    return data;
   }
 
   async post<T>(endpoint: string, data: any, includeAuth: boolean = false): Promise<T> {
+    this.clearCache();
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'POST',
       headers: this.getHeaders(includeAuth),
@@ -76,6 +123,7 @@ class ApiClient {
   }
 
   async put<T>(endpoint: string, data: any, includeAuth: boolean = false): Promise<T> {
+    this.clearCache();
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'PUT',
       headers: this.getHeaders(includeAuth),
@@ -86,6 +134,7 @@ class ApiClient {
   }
 
   async delete<T>(endpoint: string, includeAuth: boolean = false): Promise<T> {
+    this.clearCache();
     const response = await fetch(`${this.baseURL}${endpoint}`, {
       method: 'DELETE',
       headers: this.getHeaders(includeAuth),

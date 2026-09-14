@@ -56,6 +56,15 @@ export default function ShopPage() {
     }
   }, [searchFromUrl]);
 
+  // Debounce search query to prevent hammering the server on every keystroke
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // API integration state
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,8 +83,8 @@ export default function ShopPage() {
         // Add limit to prevent loading too many products at once
         params.append('limit', '50');
 
-        if (searchQuery) {
-          params.append('search', searchQuery);
+        if (debouncedSearchQuery) {
+          params.append('search', debouncedSearchQuery);
         }
         if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
         if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
@@ -106,6 +115,13 @@ export default function ShopPage() {
           discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
         }));
 
+        // Pre-seed product cache so clicking any product opens instantaneously in 0ms
+        mappedProducts.forEach((p: Product) => {
+          if (p.slug) {
+            api.setCache(`/api/products/slug/${p.slug}`, { success: true, data: p });
+          }
+        });
+
         setProducts(mappedProducts);
       } catch (err) {
         const errorMessage = err instanceof ApiError
@@ -119,7 +135,7 @@ export default function ShopPage() {
     }
 
     fetchProducts();
-  }, [searchQuery, filters.categories, filters.minPrice, filters.maxPrice, sortOption, categoryFromUrl]);
+  }, [debouncedSearchQuery, filters.categories, filters.minPrice, filters.maxPrice, sortOption, categoryFromUrl]);
 
   return (
     <div className="container mx-auto px-4 py-8">

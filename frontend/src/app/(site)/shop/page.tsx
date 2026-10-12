@@ -65,15 +65,31 @@ export default function ShopPage() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // API integration state
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Check if general products list is already cached
+  const cachedShop = api.getCached<any>('/api/products?limit=50&sort=newest');
+  const initialShopProducts: Product[] = cachedShop?.data?.products
+    ? cachedShop.data.products.map((p: any) => ({
+        ...p,
+        category: p.category?.name || p.category,
+        discountedPrice: p.discountPrice,
+        discount: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : undefined,
+      }))
+    : [];
+
+  // API integration state (instant display from cache or fallback)
+  const [products, setProducts] = useState<Product[]>(
+    initialShopProducts.length > 0 ? initialShopProducts : []
+  );
+  const [isLoading, setIsLoading] = useState(initialShopProducts.length === 0);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch products from backend
   useEffect(() => {
     async function fetchProducts() {
-      setIsLoading(true);
+      // If we don't already have products, show skeleton
+      if (products.length === 0) {
+        setIsLoading(true);
+      }
       setError(null);
 
       try {
@@ -108,7 +124,8 @@ export default function ShopPage() {
         const endpoint = `/api/products${queryString ? `?${queryString}` : ''}`;
 
         const response = await api.get<any>(endpoint);
-        const mappedProducts = (response.data?.products || []).map((p: any) => ({
+        const rawList = response.data?.products || response.products || [];
+        const mappedProducts = rawList.map((p: any) => ({
           ...p,
           category: p.category?.name || p.category,
           discountedPrice: p.discountPrice,
@@ -122,13 +139,17 @@ export default function ShopPage() {
           }
         });
 
-        setProducts(mappedProducts);
+        if (mappedProducts.length > 0 || (filters.categories.length > 0 || debouncedSearchQuery)) {
+          setProducts(mappedProducts);
+        }
       } catch (err) {
-        const errorMessage = err instanceof ApiError
-          ? err.message
-          : 'Failed to load products';
-        setError(errorMessage);
-        console.error('Error fetching products:', err);
+        if (products.length === 0) {
+          const errorMessage = err instanceof ApiError
+            ? err.message
+            : 'Failed to load products';
+          setError(errorMessage);
+        }
+        console.warn('Backend waking up or error fetching shop products:', err);
       } finally {
         setIsLoading(false);
       }

@@ -11,6 +11,7 @@ import { api, ApiError } from '@/lib/api';
 import { Product } from '@/types';
 import { toast } from 'sonner';
 import { generateOrganizationSchema } from '@/lib/seo';
+import { FALLBACK_FEATURED_PRODUCTS, FALLBACK_BESTSELLER_PRODUCTS } from '@/lib/fallback-products';
 
 export default function HomePage() {
   const cachedFeatured = api.getCached<any>('/api/products?featured=true&limit=8');
@@ -37,15 +38,26 @@ export default function HomePage() {
     }));
   };
 
-  const initialFeaturedList = cachedFeatured ? mapProducts(cachedFeatured.data?.products || cachedFeatured.products || []) : [];
-  const initialBestsellerList = cachedBestsellers ? mapProducts(cachedBestsellers.data?.products || cachedBestsellers.products || [], true) : [];
+  const parsedFeatured = cachedFeatured ? mapProducts(cachedFeatured.data?.products || cachedFeatured.products || []) : [];
+  const parsedBestsellers = cachedBestsellers ? mapProducts(cachedBestsellers.data?.products || cachedBestsellers.products || [], true) : [];
+
+  // Instant 0ms initial showcase: use cached data or instant fallback so clients never wait 3-4 minutes!
+  const initialFeaturedList = parsedFeatured.length > 0 ? parsedFeatured : FALLBACK_FEATURED_PRODUCTS;
+  const initialBestsellerList = parsedBestsellers.length > 0 ? parsedBestsellers : FALLBACK_BESTSELLER_PRODUCTS;
 
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>(initialFeaturedList);
   const [bestsellerProducts, setBestsellerProducts] = useState<Product[]>(initialBestsellerList);
-  const [isLoading, setIsLoading] = useState(initialFeaturedList.length === 0);
-  const [isBestsellersLoading, setIsBestsellersLoading] = useState(initialBestsellerList.length === 0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isBestsellersLoading, setIsBestsellersLoading] = useState(false);
 
   useEffect(() => {
+    // Pre-seed fallback products into cache for immediate click navigation
+    [...FALLBACK_FEATURED_PRODUCTS, ...FALLBACK_BESTSELLER_PRODUCTS].forEach((p) => {
+      if (!api.getCached(`/api/products/slug/${p.slug}`)) {
+        api.setCache(`/api/products/slug/${p.slug}`, { success: true, data: p });
+      }
+    });
+
     async function fetchHomeData() {
       try {
         const [featuredRes, bestsellerRes] = await Promise.all([
@@ -56,20 +68,21 @@ export default function HomePage() {
         const rawFeatured = featuredRes.data?.products || featuredRes.products || [];
         const rawBestsellers = bestsellerRes.data?.products || bestsellerRes.products || [];
 
-        // Pre-seed product detail cache for instant click navigation
+        // Pre-seed live product detail cache for instant click navigation
         [...rawFeatured, ...rawBestsellers].forEach((p: any) => {
           if (p.slug) {
             api.setCache(`/api/products/slug/${p.slug}`, { success: true, data: p });
           }
         });
 
-        const mappedFeatured = mapProducts(rawFeatured, false);
-        const mappedBestsellers = mapProducts(rawBestsellers, true);
-
-        setFeaturedProducts(mappedFeatured);
-        setBestsellerProducts(mappedBestsellers);
+        if (rawFeatured.length > 0) {
+          setFeaturedProducts(mapProducts(rawFeatured, false));
+        }
+        if (rawBestsellers.length > 0) {
+          setBestsellerProducts(mapProducts(rawBestsellers, true));
+        }
       } catch (err) {
-        console.error('Error fetching homepage data:', err);
+        console.warn('Backend waking up or error fetching homepage data, active showcase in use:', err);
       } finally {
         setIsLoading(false);
         setIsBestsellersLoading(false);
